@@ -1,0 +1,26 @@
+version: 2.1
+
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.8
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            pip install -r requirements.txt
+      - run:
+          name: Build Docker Image
+          command: |
+            docker build -t myapp .
+      - run:
+          name: Push to GCP
+          command: |
+            echo $GCLOUD_SERVICE_KEY | base64 --decode > ${HOME}/gcloud-service-key.json
+            gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+            gcloud config set project YOUR_PROJECT_ID
+            gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/myapp
+
+environments:
+  GCP_PROJECT_ID: YOUR_PROJECT_ID
